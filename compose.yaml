@@ -1,0 +1,19 @@
+services:
+  orchestration:
+    build: .
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    develop:
+      watch:
+        - action: sync
+          path: ./orchestration/
+          target: /code/orchestration/
+    ports:
+      - "8000:80"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
