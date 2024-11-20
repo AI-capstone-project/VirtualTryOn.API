@@ -1,5 +1,7 @@
-torch==2.0.1
-torchvision==0.15.2
+aiohttp
+basicsr
+accelerate
+cloudpickle
 numpy
 scipy
 scikit-image
@@ -8,17 +10,11 @@ pillow
 diffusers==0.20.2
 transformers==4.33.2
 xformers==0.0.20
-accelerate
-matplotlib
 tqdm
-gradio==3.44.4
 einops
 onnxruntime
-basicsr
 av
-cloudpickle
 fvcore
 omegaconf==2.1
 hydra-core
 pycocotools
-aiohttp
