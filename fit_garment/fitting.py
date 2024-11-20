@@ -26,7 +26,7 @@ openpose_model_hd = OpenPose(0)
 openpose_model_hd.preprocessor.body_estimation.model.to('cuda')
 parsing_model_hd = Parsing(0)
 densepose_model_hd = DensePose4Gradio(
-    cfg='preprocess/detectron2/projects/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
+    cfg='/code/fit_garment/preprocess/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
     model='https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl',
 )
 
@@ -34,13 +34,13 @@ category_dict = ['upperbody']
 category_dict_utils = ['upper_body']
 
 # #### model init >>>>
-config = OmegaConf.load("./configs/VITON.yaml")
+config = OmegaConf.load("/code/fit_garment/config/VITON.yaml")
 config.model.params.img_H = IMG_H
 config.model.params.img_W = IMG_W
 params = config.model.params
 
 model = create_model(config_path=None, config=config)
-model.load_state_dict(torch.load("./checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
+model.load_state_dict(torch.load("/code/fit_garment/checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
 model = model.cuda()
 model.eval()
 sampler2 = PLMSSampler(model)
@@ -139,3 +139,31 @@ def process_hd(vton_img, garm_img, n_steps):
     sample.save(f"./stableviton-created_images/ID-{IncrementalID}.png", 'PNG')
 
     return sample
+
+
+if __name__ == "__main__":
+    import os
+    import shutil
+
+    # Define paths
+    garment_image_path = '.examples/garment/garment1.jpg'
+    model_image_path = '.examples/model/model1.jpg'
+    output_folder = './output'
+
+    # Ensure the output folder is empty
+    if os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+    os.makedirs(output_folder)
+
+    # Load images
+    garment_image = Image.open(garment_image_path)
+    model_image = Image.open(model_image_path)
+
+    # Perform the fitting
+    result_image = process_hd(model_image, garment_image, 20)
+
+    # Save the result
+    result_image_path = os.path.join(output_folder, 'result.jpg')
+    result_image.save(result_image_path)
+
+    print(f"Result image saved to {result_image_path}")

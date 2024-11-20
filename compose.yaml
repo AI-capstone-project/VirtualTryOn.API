@@ -35,6 +35,7 @@ services:
         - action: sync
           path: ./fit_garment_integration_tests/
           target: /code/fit_garment_integration_tests/
-
+        - action: rebuild
+          path: ./fit_garment/Dockerfile
       
   
