@@ -1,8 +1,20 @@
+x-base_service: &base_service
+  stdin_open: true # docker run -i
+  tty: true # docker run -t
+  deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+
 services:
   orchestration:
-    build: .
-    stdin_open: true # docker run -i
-    tty: true # docker run -t
+    <<: *base_service
+    build: ./orchestration
+    profiles: ["orchestration"]
     develop:
       watch:
         - action: sync
@@ -10,10 +22,19 @@ services:
           target: /code/orchestration/
     ports:
       - "8000:80"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+
+  fit_garment:
+    <<: *base_service
+    build: ./fit_garment
+    profiles: ["fit_garment"]
+    develop:
+      watch:
+        - action: sync
+          path: ./fit_garment/
+          target: /code/fit_garment/
+        - action: sync
+          path: ./fit_garment_integration_tests/
+          target: /code/fit_garment_integration_tests/
+
+      
+  
