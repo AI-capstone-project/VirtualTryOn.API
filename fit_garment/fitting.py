@@ -136,7 +136,7 @@ def process_hd(vton_img, garm_img, n_steps):
     densepose_mask = densepose.convert("L").point(lambda x: 255 if x > 0 else 0, mode='1')
     sample = Image.composite(sample, Image.new("RGB", sample.size, "white"), densepose_mask)
 
-    sample.save(f"./stableviton-created_images/ID-{IncrementalID}.png", 'PNG')
+    # sample.save(f"../ID-{1}.png", 'PNG')
 
     return sample
 
@@ -155,12 +155,8 @@ if __name__ == "__main__":
         shutil.rmtree(output_folder)
     os.makedirs(output_folder)
 
-    # Load images
-    garment_image = Image.open(garment_image_path)
-    model_image = Image.open(model_image_path)
-
     # Perform the fitting
-    result_image = process_hd(model_image, garment_image, 20)
+    result_image = process_hd(model_image_path, garment_image_path, 20)
 
     # Save the result
     result_image_path = os.path.join(output_folder, 'result.jpg')
