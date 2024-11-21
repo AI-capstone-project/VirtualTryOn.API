@@ -1,0 +1,28 @@
+FROM python:3.10.15-slim
+
+WORKDIR /code
+
+RUN apt-get update && apt-get -y install ffmpeg \
+    libsm6 \
+    libxext6
+
+COPY ./checkpoints /code/fit_garment/checkpoints
+
+COPY requirements-base.txt /code/requirements-base.txt
+RUN pip install --default-timeout=100 --no-cache-dir -r requirements-base.txt
+
+RUN apt-get update -qq && apt-get install -y \
+    git \
+    g++ \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-secondary.txt /code/requirements-secondary.txt
+RUN pip install --default-timeout=100 --no-cache-dir -r requirements-secondary.txt
+
+COPY ./cldm/ /code/fit_garment/cldm/
+COPY ./config/ /code/fit_garment/config/
+COPY ./preprocess/ /code/fit_garment/preprocess/
+COPY ./fit_garment_integration_tests/ /code/fit_garment/fit_garment_integration_tests/
+COPY ./ldm /code/fit_garment/ldm/
+COPY ./__init__.py ./fitting.py ./utils_stableviton.py /code/fit_garment/
