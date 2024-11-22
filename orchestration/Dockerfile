@@ -10,3 +10,4 @@ COPY . /code/orchestration
 
 # The following command should be run after copying the .env file into the orchestration folder
 # CMD ["fastapi", "run", "orchestration/main.py", "--reload", "--port", "80"]
+# fastapi run orchestration/main.py --reload --port 80

@@ -66,8 +66,8 @@ services:
     develop:
       watch:
         - action: sync
-          path: ./scripts
+          path: ./create_pose/scripts
           target: /home/myuser/SMPLitex/scripts
         - action: sync
-          path: ./sample-data
+          path: ./create_pose/sample-data
           target: /home/myuser/SMPLitex/sample-data

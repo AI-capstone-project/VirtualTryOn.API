@@ -42,6 +42,7 @@ def decode_jwt(token: str) -> dict:
     try:
         decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM], options={"verify_aud": False, "verify_signature": True})
         return decoded_token if decoded_token["exp"] >= time.time() else None
-    except:
+    except Exception as e:
+        print(e)
         return {}
 
