@@ -11,6 +11,27 @@ x-base_service: &base_service
 
 
 services:
+  download-webui:
+    build: ./webui/services/download/
+    profiles: ["download"]
+    volumes:
+      - ./webui/data:/data
+
+  auto:
+    <<: *base_service
+    ports:
+      - "${WEBUI_PORT:-7860}:7860"
+    volumes:
+      - ./webui/data:/data
+      - ./webui/output:/output
+    stop_signal: SIGKILL
+    profiles: ["auto"]
+    build: ./webui/services/AUTOMATIC1111
+    image: sd-auto:78
+    environment:
+      - CLI_ARGS=--allow-code --medvram --xformers --enable-insecure-extension-access --api
+
+
   orchestration:
     <<: *base_service
     build: ./orchestration
@@ -37,5 +58,16 @@ services:
           target: /code/fit_garment_integration_tests/
         - action: rebuild
           path: ./fit_garment/Dockerfile
-      
-  
+
+  create_pose:
+    <<: *base_service
+    build: ./create_pose
+    profiles: ["create_pose"]
+    develop:
+      watch:
+        - action: sync
+          path: ./scripts
+          target: /home/myuser/SMPLitex/scripts
+        - action: sync
+          path: ./sample-data
+          target: /home/myuser/SMPLitex/sample-data
