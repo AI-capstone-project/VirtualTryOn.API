@@ -1,0 +1,13 @@
+# Refresh models in webui
+curl -X 'POST' \
+  'http://0.0.0.0:7860/sdapi/v1/refresh-checkpoints' \
+  -H 'accept: application/json' \
+  -d ''
+
+# copy
+
+
+curl -X 'GET' \
+  'https://zvwcckvkfwfcsmapzixw.supabase.co/storage/v1/object/authenticated/user-images/fba2a77f-c98e-49f1-bfb8-36de9eba3bd9/image.png' \
+  -H 'accept: application/json' \
+  -H 'authorization: eyJhbGciOiJIUzI1NiIsImtpZCI6IjE1eFoxTWE0WnJ1V2g4cnUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3p2d2Nja3ZrZndmY3NtYXB6aXh3LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJmYmEyYTc3Zi1jOThlLTQ5ZjEtYmZiOC0zNmRlOWViYTNiZDkiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzMyMjQ1NDE0LCJpYXQiOjE3MzIyNDE4MTQsImVtYWlsIjoiIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnt9LCJ1c2VyX21ldGFkYXRhIjp7fSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJhbm9ueW1vdXMiLCJ0aW1lc3RhbXAiOjE3MzIyNDE4MTR9XSwic2Vzc2lvbl9pZCI6IjAxYTIwMGRjLTdiYTUtNDM3MC04YzE4LWJkNTQ2YjUzMGNkOSIsImlzX2Fub255bW91cyI6dHJ1ZX0.ppV01WWKlVSWhrr4jVODqExcZgGpQRGRlcNHsdEM214'

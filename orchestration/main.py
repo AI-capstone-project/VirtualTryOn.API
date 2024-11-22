@@ -1,15 +1,32 @@
-from typing import Union
+from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
 
-from fastapi import FastAPI
-
+from fastapi import FastAPI, Depends, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi import UploadFile, File
+from typing import Union
 import base64
-from PIL import Image
-from io import BytesIO
+import aiohttp
+
+from pydantic import BaseModel
+
+from authentication.jwt_helpers import JWTBearer, decode_jwt
+
+load_dotenv()
+
+JWT_SECRET: str = os.getenv("JWT_SECRET")
+JWT_ALGORITHM: str = "HS256"
+
+SUPABASE_URL: str = os.getenv("SUPABASE_URL")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
+
+supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
+
+class ImageInfoRequest(BaseModel):
+    image_path: str
 
 # Add CORS middleware
 app.add_middleware(
@@ -22,39 +39,110 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    fitted_garment = fit()
-    return {fitted_garment}
+    return "Hello world"
+
+# authentication
+@app.get("/sign_up")
+def sign_up():
+    res = supa.auth.sign_up(
+        {
+            "email":"testsupa@gmail.com",
+            "password":"testsupabasenow"
+        }
+    )
+
+    return res
+
+@app.get("/sign_out")
+def sign_out():
+    res = supa.auth.sign_out()
+    return "success"
+
+@app.get("/sign_in")
+def sign_in():
+    res = supa.auth.sign_in_with_password({"email": "testsupa@gmail.com", "password": "testsupabasenow"})
+    return res
+
+@app.get("/anonymous_sign_in")
+def anonymous_sign_in():
+    res = supa.auth.sign_in_anonymously()
+    return res
 
 
-@app.post("/upload-images")
-async def upload_images(image1: UploadFile = File(...), image2: UploadFile = File(...)):
-    image1_b64 = base64.b64encode(await image1.read()).decode('utf-8')
-    image2_b64 = base64.b64encode(await image2.read()).decode('utf-8')
-    process_images(image1_b64, image2_b64)
-    def b64_to_pil(image_b64: str) -> Image.Image:
-        image_data = base64.b64decode(image_b64)
-        return Image.open(BytesIO(image_data))
+@app.get("/is_authenticated", dependencies=[Depends(JWTBearer())])
+def is_authenticated(request: Request):
+    token = request.headers["authorization"]
+    decoded_token = decode_jwt(token.removeprefix("Bearer "))
+    return decoded_token
 
-    def pil_to_b64(image: Image.Image) -> str:
-        buffered = BytesIO()
-        image.save(buffered, format="PNG")
-        return base64.b64encode(buffered.getvalue()).decode('utf-8')
+@app.post("/upload_image", dependencies=[Depends(JWTBearer())])
+def upload_image(request: Request, file: UploadFile = File(...)):
+    file_name = file.filename
+    file_content = file.file.read()
+    token = request.headers["authorization"]
+    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    extension = file_name.split(".")[-1]
+    random_name = base64.urlsafe_b64encode(os.urandom(6)).decode("utf-8").rstrip("=")
+    path = f"{random_name}.{extension}"
 
-    image1_pil = b64_to_pil(image1_b64)
-    image2_pil = b64_to_pil(image2_b64)
+    _ = supa.storage.from_('user-images').upload(
+                             file=file_content,
+                             path=f"{user_id}/{path}",
+                             file_options={"cache-control": "3600", "upsert": "false", 'content-type': f'image/{extension}'})
 
-    # Example of converting back to base64 if needed
-    image1_b64_converted = pil_to_b64(image1_pil)
-    image2_b64_converted = pil_to_b64(image2_pil)
-    return JSONResponse(content={"message": "Images processed successfully"})
+    signed_url = supa.storage.from_("user-images").create_signed_url(
+      f"{user_id}/{path}", 60 * 5
+    )
 
-def process_images(image1_b64: str, image2_b64: str):
-    # Implement your image processing logic here
-    pass
+    return {"file_name": path}
+
+@app.get("/pose/{image_name}", dependencies=[Depends(JWTBearer())])
+async def pose(image_name: str, request: Request):
+    token = request.headers["authorization"]
+    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    signed_url = supa.storage.from_("user-images").create_signed_url(
+      f"{user_id}/{image_name}", 60 * 5
+    )
+    print(signed_url['signedURL'])
+
+    payload = {
+        "image_name": image_name,
+        "signed_url": signed_url['signedURL']
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post("http://create_pose:8000/prepare", json=payload) as response:
+            message = await response.json()
+
+    return message
+
+@app.get("/pose/{image_name}/{pose_id}", dependencies=[Depends(JWTBearer())])
+async def pose(image_name: str, pose_id: str, request: Request):
+    token = request.headers["authorization"]
+    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    signed_url = supa.storage.from_("user-images").create_signed_url(
+      f"{user_id}/{image_name}", 60 * 5
+    )
+
+    payload = {
+        "image_name": image_name,
+        "signed_url": signed_url['signedURL'],
+        "pose_id": pose_id,
+        "user_id": user_id
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post("http://create_pose:8000/generate_pose", json=payload) as response:
+            image_info = await response.json()
+
+    return image_info
 
 
-
-# @app.post("/upload-model-image")
-# async def upload_model_image(File: UploadFile = File(...)):
-#     # save to supabase
-    
+@app.post('/signed_url', dependencies=[Depends(JWTBearer())])
+def signed_url(request: Request, item: ImageInfoRequest):
+    token = request.headers["authorization"]
+    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    signed_url = supa.storage.from_("user-images").create_signed_url(
+      f"{user_id}/{item.image_path.split('/')[-1]}", 60 * 5
+    )
+    return signed_url

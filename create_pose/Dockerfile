@@ -22,12 +22,10 @@ RUN useradd -m -s /bin/bash myuser && echo "myuser:myuser" | chpasswd && adduser
 RUN git clone https://github.com/cxgincsu/SemanticGuidedHumanMatting.git /home/myuser/SemanticGuidedHumanMatting && \
     rm -rf /home/myuser/SemanticGuidedHumanMatting/.git && \
     git clone https://github.com/facebookresearch/detectron2.git /home/myuser/detectron2 && \
-    rm -rf /home/myuser/detectron2/.git && \
-    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git /home/myuser/stable-diffusion-webui && \
-    rm -rf /home/myuser/stable-diffusion-webui/.git
+    rm -rf /home/myuser/detectron2/.git
 
 # Change ownership of the directories to myuser
-RUN chown -R myuser:myuser /home/myuser/SemanticGuidedHumanMatting /home/myuser/detectron2 /home/myuser/stable-diffusion-webui
+RUN chown -R myuser:myuser /home/myuser/SemanticGuidedHumanMatting /home/myuser/detectron2
 
 # Set the working directory
 WORKDIR /home/myuser/SMPLitex
@@ -36,8 +34,7 @@ RUN mkdir -p scripts
 
 # Move the cloned repositories into the scripts directory
 RUN mv /home/myuser/SemanticGuidedHumanMatting ./scripts/SemanticGuidedHumanMatting && \
-    mv /home/myuser/detectron2 ./scripts/detectron2 && \
-    mv /home/myuser/stable-diffusion-webui ./scripts/stable-diffusion-webui
+    mv /home/myuser/detectron2 ./scripts/detectron2
 
 # Move ./SGHM-RestNet50.pth into the current directory
 COPY --chown=myuser:myuser SGHM-ResNet50.pth .
@@ -160,3 +157,6 @@ RUN mkdir -p ./dummy_data/stableviton-created_images/
 COPY --chown=myuser:myuser scripts/dummy_data/images/MEN-Jackets_Vests-id_00003336-09_1_front.jpg ./dummy_data/stableviton-created_images/
 
 RUN chmod 777 ./dummy_data/3d_outputs/ ./dummy_data/stableviton-created_images/
+
+# CMD [ "conda", "run", "-n", "smplitex", "--no-capture-output", "fastapi", "run", "app.py", "--reload" ]
+# conda run -n smplitex --no-capture-output fastapi run app.py --reload
