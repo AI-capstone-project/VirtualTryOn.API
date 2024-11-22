@@ -1,13 +1,25 @@
-from typing import Union
+from supabase import create_client, Client
+from dotenv import load_dotenv
+import os
 
-from fastapi import FastAPI
-
+from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi import UploadFile, File
+from typing import Union
 import base64
-from PIL import Image
 from io import BytesIO
+
+from authentication.jwt_helpers import JWTBearer
+
+load_dotenv()
+
+JWT_SECRET: str = os.getenv("JWT_SECRET")
+JWT_ALGORITHM: str = "HS256"
+
+SUPABASE_URL: str = os.getenv("SUPABASE_URL")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
+
+supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
@@ -22,9 +34,39 @@ app.add_middleware(
 
 @app.get("/")
 async def read_root():
-    fitted_garment = fit()
-    return {fitted_garment}
+    return "Hello world"
 
+# authentication
+@app.get("/sign_up")
+def sign_up():
+    res = supa.auth.sign_up(
+        {
+            "email":"testsupa@gmail.com",
+            "password":"testsupabasenow"
+        }
+    )
+
+    return res
+
+@app.get("/sign_out")
+def sign_out():
+    res = supa.auth.sign_out()
+    return "success"
+
+@app.get("/sign_in")
+def sign_in():
+    res = supa.auth.sign_in_with_password({"email": "testsupa@gmail.com", "password": "testsupabasenow"})
+    return res
+
+@app.get("/anonymous_sign_in")
+def anonymous_sign_in():
+    res = supa.auth.sign_in_anonymously()
+    return res
+
+
+@app.get("/is_authenticated", dependencies=[Depends(JWTBearer())])
+def is_authenticated():
+    return "Authenticated"
 
 @app.post("/upload-images")
 async def upload_images(image1: UploadFile = File(...), image2: UploadFile = File(...)):
@@ -51,10 +93,3 @@ async def upload_images(image1: UploadFile = File(...), image2: UploadFile = Fil
 def process_images(image1_b64: str, image2_b64: str):
     # Implement your image processing logic here
     pass
-
-
-
-# @app.post("/upload-model-image")
-# async def upload_model_image(File: UploadFile = File(...)):
-#     # save to supabase
-    

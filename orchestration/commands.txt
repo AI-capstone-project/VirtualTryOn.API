@@ -1,0 +1,7 @@
+# Refresh models in webui
+curl -X 'POST' \
+  'http://0.0.0.0:7860/sdapi/v1/refresh-checkpoints' \
+  -H 'accept: application/json' \
+  -d ''
+
+# copy 
