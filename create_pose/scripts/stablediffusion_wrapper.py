@@ -4,13 +4,13 @@ class StableDiffusionAPI:
     def __init__(self):
 
         # create API client
-        self.api = webuiapi.WebUIApi()
+        # self.api = webuiapi.WebUIApi()
 
         # create API client with custom host, port
-        self.api = webuiapi.WebUIApi(host='127.0.0.1', port=7860)
+        # self.api = webuiapi.WebUIApi(host='auto', port=7860)
 
         # create API client with default sampler, steps.
-        self.api = webuiapi.WebUIApi(sampler='Euler a', steps=20)
+        self.api = webuiapi.WebUIApi(host='auto', port=7860, sampler='Euler a', steps=20)
 
     def img2img(self, prompt, negative_prompt="", batch_size=1, steps=20, cfg_scale=17, seed=-1, denoising_strength=0.8, mask_image=None, images=None, width=512, height=512, restore_faces=True, inpainting_fill=0):
         result = self.api.img2img(prompt=prompt,

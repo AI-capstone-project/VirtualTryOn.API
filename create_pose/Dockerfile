@@ -157,3 +157,6 @@ RUN mkdir -p ./dummy_data/stableviton-created_images/
 COPY --chown=myuser:myuser scripts/dummy_data/images/MEN-Jackets_Vests-id_00003336-09_1_front.jpg ./dummy_data/stableviton-created_images/
 
 RUN chmod 777 ./dummy_data/3d_outputs/ ./dummy_data/stableviton-created_images/
+
+# CMD [ "conda", "run", "-n", "smplitex", "--no-capture-output", "fastapi", "run", "app.py", "--reload" ]
+# conda run -n smplitex --no-capture-output fastapi run app.py --reload

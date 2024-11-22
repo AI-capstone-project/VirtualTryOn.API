@@ -9,6 +9,8 @@ from typing import Union
 import base64
 import aiohttp
 
+from pydantic import BaseModel
+
 from authentication.jwt_helpers import JWTBearer, decode_jwt
 
 load_dotenv()
@@ -22,6 +24,9 @@ SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
 supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
+
+class ImageInfoRequest(BaseModel):
+    image_path: str
 
 # Add CORS middleware
 app.add_middleware(
@@ -91,21 +96,27 @@ def upload_image(request: Request, file: UploadFile = File(...)):
 
     return {"file_name": path}
 
-@app.get("/pose/{image_path}", dependencies=[Depends(JWTBearer())])
+@app.get("/pose/{image_name}", dependencies=[Depends(JWTBearer())])
 async def pose(image_name: str, request: Request):
     token = request.headers["authorization"]
     user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
     signed_url = supa.storage.from_("user-images").create_signed_url(
       f"{user_id}/{image_name}", 60 * 5
     )
+    print(signed_url['signedURL'])
+
+    payload = {
+        "image_name": image_name,
+        "signed_url": signed_url['signedURL']
+    }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post("http://create_pose:8000/prepare", json={"image_name": image_name, "signed_url": "Hello"}) as response:
-            image = await response.read()
+        async with session.post("http://create_pose:8000/prepare", json=payload) as response:
+            message = await response.json()
 
-    return image
+    return message
 
-@app.get("/pose/{image_path}/{pose_id}", dependencies=[Depends(JWTBearer())])
+@app.get("/pose/{image_name}/{pose_id}", dependencies=[Depends(JWTBearer())])
 async def pose(image_name: str, pose_id: str, request: Request):
     token = request.headers["authorization"]
     user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
@@ -113,8 +124,25 @@ async def pose(image_name: str, pose_id: str, request: Request):
       f"{user_id}/{image_name}", 60 * 5
     )
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post("http://create_pose:8000/pose", data={"image_name": {image_name}, "signed_url": signed_url, "pose_id": pose_id}) as response:
-            image = await response.read()
+    payload = {
+        "image_name": image_name,
+        "signed_url": signed_url['signedURL'],
+        "pose_id": pose_id,
+        "user_id": user_id
+    }
 
-    return image
+    async with aiohttp.ClientSession() as session:
+        async with session.post("http://create_pose:8000/generate_pose", json=payload) as response:
+            image_info = await response.json()
+
+    return image_info
+
+
+@app.post('/signed_url', dependencies=[Depends(JWTBearer())])
+def signed_url(request: Request, item: ImageInfoRequest):
+    token = request.headers["authorization"]
+    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    signed_url = supa.storage.from_("user-images").create_signed_url(
+      f"{user_id}/{item.image_path.split('/')[-1]}", 60 * 5
+    )
+    return signed_url
