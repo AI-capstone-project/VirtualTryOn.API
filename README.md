@@ -24,3 +24,19 @@
         -- render_results.py: The main file for creating poses and usings utils files to generate a 3D gif
         -- stablediffusion_wrapper: A wrapper that wraps around the stable-diffusion-webui pipeline and makes calls to it in order to complete A1111's work of completing the texture. Includes the img2img and text2img abilities
 
+## fit_garment
+    -- checkpoints: The checkpoints for densepose, humanparsing, and the pretrained models go here
+    -- cldm: Not sure
+    -- config
+        -- VITON.yaml: a yaml file that includes the configuration of stable-viton
+    -- fit_garment_integration_tests: includes some example images for integration testing
+    -- ldm: not sure
+    -- preprocess:
+        -- DensePose
+        -- humanparsing
+        -- openpose
+    -- Dockerfile: This dockerfile is to only create the fit_garment image
+    -- requirements-base.txt: This includes all requirements that are unlikely to change like torch or big
+    -- requirements-secondary.txt: This includes all requirements that are likely to change or small. This is used in a later stage of the dockerfile to increase the speed of builds
+    -- fitting.py: This is the file that coordinates every file to fit the garment to the person
+    -- utils_stableviton.py: not sure
