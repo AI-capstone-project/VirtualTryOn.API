@@ -88,4 +88,4 @@ Here are what we changed to these projects
 2. We've investigated all possible modifications to the SMPL library used in SMPLitex and documented every value from 0 to 68
 3. We've increased the performance of fitting a garment by adjusting the input and output image shape
 4. We've created 3 poses for users to be able to choose from
-5. We've documented a dockerfile for stableviton, pytorch3d, and smplitex using multi-staging for faster rebuild time
+5. We've documented a dockerfile for stableviton, pytorch3d, and smplitex using multi-staging for faster rebuild time, outlining the requirements for each
