@@ -73,10 +73,11 @@ after cloning the repo `cd` into the VirtualTryOn.API directoory
 4. run `docker compose --profile orchestration --profile fit_garment --profile auto --profile create_pose watch` This will take a while
 5. create an `.env` file with the secrets of supabase and duplicate it in `/create_pose/scripts` and `/orcehstration` folders within the docker containers. Because in the previous command you are doing a `watch`, when something is changed in the folder structure, it also changes your container's folder structure, so if you create the .env file in the two above folders and save them, they will be added to the containers. The other way is to use `docker cp` to copy files from host to the containers. for example: \
 `docker cp create_pose/scripts/.env virtual-try-on-v2-create_pose-1:/home/myuser/SMPLitex/scripts/` \
-`docker cp orchestration/.env virtual-try-on-v2-orchestration-1:/code/orchestration/`
-6. attach a shell to the `fit_garment` container and run `fastapi run orchestration/main.py --reload --port 80`
-7. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload`
-8. You should now be able to open this on your host machine's browser by going to http://0.0.0.0:8000/docs
+`docker cp orchestration/.env virtual-try-on-v2-orchestration-1:/code/orchestration/` \
+virtual-try-on-v2 might be different for you.
+7. attach a shell to the `fit_garment` container and run `fastapi run orchestration/main.py --reload --port 80`
+8. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload`
+9. You should now be able to open this on your host machine's browser by going to http://0.0.0.0:8000/docs
 
 
 # What did we add to the existing codebase
