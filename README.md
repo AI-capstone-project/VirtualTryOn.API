@@ -49,6 +49,9 @@
     -- requirements.txt: requirements for orchestration layer
     -- Dockerfile: a dockerfile that creates the orchestration layer
 
+## webui
+    -- a copy of https://github.com/AbdBarho/stable-diffusion-webui-docker only keeping the A1111 service
+
 # ...
     -- .editorconfig: A file that represents the standard for files. for example, every file should end with an empty line. Requires the editorconfig extension in vs code
     -- compose.yaml: A docker compose file that includes all services. It includes the download of checkpoints for webui, and the other services
