@@ -75,3 +75,17 @@ after cloning the repo `cd` into the VirtualTryOn.API directoory
 6. attach a shell to the `fit_garment` container and run `fastapi run orchestration/main.py --reload --port 80`
 7. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload`
 8. You should now be able to open this on your host machine's browser by going to http://0.0.0.0:8000/docs
+
+
+# What did we add to the existing codebase
+This project is a combination of 2-3 existing projects
+https://github.com/dancasas/SMPLitex
+https://huggingface.co/spaces/rlawjdghek/StableVITON/tree/main
+https://github.com/AbdBarho/stable-diffusion-webui-docker
+
+Here are what we changed to these projects
+1. We simplified each project to only the scope of fitting a garment to a user and creating 360 degree gifs from it
+2. We've investigated all possible modifications to the SMPL library used in SMPLitex and documented every value from 0 to 68
+3. We've increased the performance of fitting a garment by adjusting the input and output image shape
+4. We've created 3 poses for users to be able to choose from
+5. We've documented a dockerfile for stableviton, pytorch3d, and smplitex using multi-staging for faster rebuild time
