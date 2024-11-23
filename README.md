@@ -43,4 +43,12 @@
 
 ## orchestration
     -- authentication
-        -- jwt_helpers.py: 
+        -- jwt_helpers.py: a class that includes reusable logic to only allow authenticated users to access them
+    -- .dockerignore: a file to let docker know what files to ignore when creating the image, for example the .env file
+    -- main.py: A fastapi that includes the orchestration layer and has the endpoints FE will be calling, within it, it may call fit_garment or create_pose services
+    -- requirements.txt: requirements for orchestration layer
+    -- Dockerfile: a dockerfile that creates the orchestration layer
+
+# ...
+    -- .editorconfig: A file that represents the standard for files. for example, every file should end with an empty line. Requires the editorconfig extension in vs code
+    -- compose.yaml: A docker compose file that includes all services. It includes the download of checkpoints for webui, and the other services
