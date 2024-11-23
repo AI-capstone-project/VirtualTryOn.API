@@ -40,3 +40,7 @@
     -- requirements-secondary.txt: This includes all requirements that are likely to change or small. This is used in a later stage of the dockerfile to increase the speed of builds
     -- fitting.py: This is the file that coordinates every file to fit the garment to the person
     -- utils_stableviton.py: not sure
+
+## orchestration
+    -- authentication
+        -- jwt_helpers.py: 
