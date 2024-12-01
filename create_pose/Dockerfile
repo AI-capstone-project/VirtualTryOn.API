@@ -158,5 +158,5 @@ COPY --chown=myuser:myuser scripts/dummy_data/images/MEN-Jackets_Vests-id_000033
 
 RUN chmod 777 ./dummy_data/3d_outputs/ ./dummy_data/stableviton-created_images/
 
-CMD [ "conda", "run", "-n", "smplitex", "--no-capture-output", "fastapi", "run", "app.py", "--reload", "--port", "80" ]
-# conda run -n smplitex --no-capture-output fastapi run app.py --reload
+# CMD [ "conda", "run", "-n", "smplitex", "--no-capture-output", "fastapi", "run", "app.py", "--reload", "--port", "80" ]
+# conda run -n smplitex --no-capture-output fastapi run app.py --reload -- port 80

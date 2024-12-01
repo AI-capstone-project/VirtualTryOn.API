@@ -60,15 +60,16 @@ async def read_root():
 @app.post("/sign_up")
 def sign_up(sign_up_request: SignUpRequest):
     try:
-      res = supa.auth.sign_up(
-          {
-              "email": sign_up_request.email,
-              "password": sign_up_request.password
-          }
-      )
-      return res
+        res = supa.auth.sign_up(
+            {
+                "email": sign_up_request.email,
+                "password": sign_up_request.password
+            }
+        )
+        return res
     except Exception as e:
-      raise HTTPException(status_code=400, detail=e.message)
+        raise HTTPException(status_code=400, detail=e.message)
+
 
 @app.get("/sign_out")
 def sign_out():
@@ -79,14 +80,14 @@ def sign_out():
 @app.post("/sign_in")
 def sign_in(sign_in_request: SignInRequest):
     try:
-      res = supa.auth.sign_in_with_password(
-          {
-              "email": sign_in_request.email,
-              "password": sign_in_request.password
-          })
-      return res
+        res = supa.auth.sign_in_with_password(
+            {
+                "email": sign_in_request.email,
+                "password": sign_in_request.password
+            })
+        return res
     except Exception as e:
-      raise HTTPException(status_code=401, detail=e)
+        raise HTTPException(status_code=401, detail=e)
 
 
 @app.get("/anonymous_sign_in")
@@ -116,6 +117,7 @@ def upload_image(request: Request, file: UploadFile = File(...)):
 
     return {"file_name": path}
 
+
 @app.post('/signed_url', dependencies=[Depends(JWTBearer())])
 def signed_url(request: Request, item: ImageInfoRequest):
     token = set_supabase_auth_to_user(request)
@@ -125,10 +127,12 @@ def signed_url(request: Request, item: ImageInfoRequest):
     )
     return signed_url
 
+
 def set_supabase_auth_to_user(request):
     token = request.headers["authorization"].removeprefix("Bearer ")
     supa.auth.set_session(token, 'dummy_refresh_token')
     return token
+
 
 def create_image_path(file):
     file_name = file.filename
@@ -136,4 +140,4 @@ def create_image_path(file):
     random_name = base64.urlsafe_b64encode(
         os.urandom(6)).decode("utf-8").rstrip("=")
     path = f"{random_name}.{extension}"
-    return extension,path
+    return extension, path

@@ -28,5 +28,5 @@ COPY ./ldm /code/fit_garment/ldm/
 COPY ./authentication/ /code/fit_garment/authentication/
 COPY ./fit_garment_api.py ./fitting.py ./utils_stableviton.py /code/fit_garment/
 
-CMD ["fastapi", "run", "/code/fit_garment/fit_garment_api.py", "--reload", "--port", "80"]
+# CMD ["fastapi", "run", "/code/fit_garment/fit_garment_api.py", "--reload", "--port", "80"]
 # fastapi run /code/fit_garment/fit_garment_api.py --reload --port 80

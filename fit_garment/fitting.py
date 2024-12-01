@@ -1,3 +1,6 @@
+from utils_stableviton import get_mask_location, get_batch, tensor2img, center_crop
+from cldm.plms_hacked import PLMSSampler
+from cldm.model import create_model
 from preprocess.DensePose.apply_net_gradio import DensePose4Gradio
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
@@ -12,9 +15,6 @@ from omegaconf import OmegaConf
 from PIL import Image
 print(torch.cuda.is_available(), torch.cuda.device_count())
 
-from cldm.model import create_model
-from cldm.plms_hacked import PLMSSampler
-from utils_stableviton import get_mask_location, get_batch, tensor2img, center_crop
 
 PROJECT_ROOT = Path(__file__).absolute().parents[1].absolute()
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -44,6 +44,7 @@ params = config.model.params
 # model = model.cuda()
 # model.eval()
 # sampler2 = PLMSSampler(model)
+
 
 def stable_viton_model_hd(
         batch,
@@ -103,10 +104,12 @@ def process_hd(vton_img, garm_img, n_steps):
     print('get agnostic map... ', end='')
     keypoints = openpose_model_hd(vton_img.resize((IMG_W, IMG_H)))
     model_parse, _ = parsing_model_hd(vton_img.resize((IMG_W, IMG_H)))
-    mask, mask_gray = get_mask_location(model_type, category_dict_utils[category], model_parse, keypoints, radius=5)
+    mask, mask_gray = get_mask_location(
+        model_type, category_dict_utils[category], model_parse, keypoints, radius=5)
     mask = mask.resize((IMG_W, IMG_H), Image.NEAREST)
     mask_gray = mask_gray.resize((IMG_W, IMG_H), Image.NEAREST)
-    masked_vton_img = Image.composite(mask_gray, vton_img, mask)  # agnostic map
+    masked_vton_img = Image.composite(
+        mask_gray, vton_img, mask)  # agnostic map
     print('%.2fs' % (time.time() - stt))
 
     stt = time.time()
@@ -131,12 +134,15 @@ def process_hd(vton_img, garm_img, n_steps):
     )
 
     # Convert to white everything from sample that is outside of densepose
-    densepose_mask = densepose.convert("L").point(lambda x: 255 if x > 0 else 0, mode='1')
-    sample = Image.composite(sample, Image.new("RGB", sample.size, "white"), densepose_mask)
+    densepose_mask = densepose.convert("L").point(
+        lambda x: 255 if x > 0 else 0, mode='1')
+    sample = Image.composite(sample, Image.new(
+        "RGB", sample.size, "white"), densepose_mask)
 
     # sample.save(f"../ID-{1}.png", 'PNG')
 
     return sample
+
 
 if __name__ == "__main__":
     import os

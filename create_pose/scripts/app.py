@@ -67,7 +67,6 @@ async def read_root(request: Request, json: PrepareItemRequest):
     return {"message": "3D try-on script executed"}
 
 
-
 @app.post("/generate_pose", dependencies=[Depends(JWTBearer())])
 async def create_pose(request: Request, item: GeneratePoseItemRequest):
     token = set_supabase_auth_to_user(request)
@@ -130,7 +129,8 @@ def find_pose_path_from_file_system(item, extension):
     image_path_pattern = f"/home/myuser/SMPLitex/scripts/dummy_data/3d_outputs/{image_name_without_extension}_*POSEID-{item.pose_id}-360.gif"
     matching_files = glob.glob(image_path_pattern)
     if not matching_files:
-        raise HTTPException(status_code=404, detail=f"Image with path {image_path_pattern} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Image with path {image_path_pattern} not found")
     image_path = matching_files[0]
     return image_path
 
@@ -139,6 +139,7 @@ def set_supabase_auth_to_user(request):
     token = request.headers["authorization"].removeprefix("Bearer ")
     supa.auth.set_session(token, 'dummy_refresh_token')
     return token
+
 
 def save_image_in_file_system(json, user_id):
     image_path = f"/home/myuser/SMPLitex/scripts/dummy_data/stableviton-created_images/{json.image_name}"
@@ -149,6 +150,7 @@ def save_image_in_file_system(json, user_id):
         )
         f.write(response)
     return supabase_image_path
+
 
 def prepare_texture_for_the_last_image_added_to_file_system():
     process = subprocess.Popen(["sh", "/home/myuser/SMPLitex/scripts/create-texture.sh",
