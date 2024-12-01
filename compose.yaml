@@ -42,7 +42,7 @@ services:
           path: ./orchestration/
           target: /code/orchestration/
     ports:
-      - "8000:80"
+      - "8080:80"
 
   fit_garment:
     <<: *base_service
@@ -58,6 +58,8 @@ services:
           target: /code/fit_garment_integration_tests/
         - action: rebuild
           path: ./fit_garment/Dockerfile
+    ports:
+      - "8081:80"
 
   create_pose:
     <<: *base_service
@@ -71,3 +73,6 @@ services:
         - action: sync
           path: ./create_pose/sample-data
           target: /home/myuser/SMPLitex/sample-data
+    ports:
+      - "8082:80"
+

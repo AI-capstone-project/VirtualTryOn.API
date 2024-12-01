@@ -25,4 +25,8 @@ COPY ./config/ /code/fit_garment/config/
 COPY ./preprocess/ /code/fit_garment/preprocess/
 COPY ./fit_garment_integration_tests/ /code/fit_garment/fit_garment_integration_tests/
 COPY ./ldm /code/fit_garment/ldm/
-COPY ./__init__.py ./fitting.py ./utils_stableviton.py /code/fit_garment/
+COPY ./authentication/ /code/fit_garment/authentication/
+COPY ./fit_garment_api.py ./fitting.py ./utils_stableviton.py /code/fit_garment/
+
+CMD ["fastapi", "run", "/code/fit_garment/fit_garment_api.py", "--reload", "--port", "80"]
+# fastapi run /code/fit_garment/fit_garment_api.py --reload --port 80

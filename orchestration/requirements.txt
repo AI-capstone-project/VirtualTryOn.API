@@ -5,4 +5,3 @@ auth
 PyJWT
 python-decouple
 python-dotenv
-aiohttp

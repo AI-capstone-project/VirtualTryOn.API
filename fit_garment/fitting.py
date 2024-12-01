@@ -22,13 +22,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 IMG_H = 1024//2
 IMG_W = 768//2
 
-openpose_model_hd = OpenPose(0)
-openpose_model_hd.preprocessor.body_estimation.model.to('cuda')
-parsing_model_hd = Parsing(0)
-densepose_model_hd = DensePose4Gradio(
-    cfg='/code/fit_garment/preprocess/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
-    model='https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl',
-)
+# openpose_model_hd = OpenPose(0)
+# openpose_model_hd.preprocessor.body_estimation.model.to('cuda')
+# parsing_model_hd = Parsing(0)
+# densepose_model_hd = DensePose4Gradio(
+#     cfg='/code/fit_garment/preprocess/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
+#     model='https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl',
+# )
 
 category_dict = ['upperbody']
 category_dict_utils = ['upper_body']
@@ -39,11 +39,11 @@ config.model.params.img_H = IMG_H
 config.model.params.img_W = IMG_W
 params = config.model.params
 
-model = create_model(config_path=None, config=config)
-model.load_state_dict(torch.load("/code/fit_garment/checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
-model = model.cuda()
-model.eval()
-sampler2 = PLMSSampler(model)
+# model = create_model(config_path=None, config=config)
+# model.load_state_dict(torch.load("/code/fit_garment/checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
+# model = model.cuda()
+# model.eval()
+# sampler2 = PLMSSampler(model)
 
 def stable_viton_model_hd(
         batch,
@@ -86,14 +86,12 @@ def stable_viton_model_hd(
 
 def process_hd(vton_img, garm_img, n_steps):
     global IncrementalID
+    return vton_img
     model_type = 'hd'
     category = 0  # 0:upperbody;
 
     stt = time.time()
     print('load images... ', end='')
-    
-    garm_img = Image.open(garm_img)
-    vton_img = Image.open(vton_img)
 
     vton_img = center_crop(vton_img)
     garm_img = garm_img.resize((IMG_W, IMG_H))
@@ -131,7 +129,7 @@ def process_hd(vton_img, garm_img, n_steps):
         batch,
         n_steps,
     )
-    
+
     # Convert to white everything from sample that is outside of densepose
     densepose_mask = densepose.convert("L").point(lambda x: 255 if x > 0 else 0, mode='1')
     sample = Image.composite(sample, Image.new("RGB", sample.size, "white"), densepose_mask)
@@ -139,7 +137,6 @@ def process_hd(vton_img, garm_img, n_steps):
     # sample.save(f"../ID-{1}.png", 'PNG')
 
     return sample
-
 
 if __name__ == "__main__":
     import os

@@ -20,4 +20,11 @@ hydra-core
 pycocotools
 git+https://github.com/facebookresearch/detectron2.git
 git+https://github.com/facebookresearch/detectron2@main#subdirectory=projects/DensePose
-    
+fastapi[standard]>=0.113.0,<0.114.0
+pydantic>=2.7.0,<3.0.0
+supabase
+auth
+PyJWT
+python-decouple
+python-dotenv
+huggingface_hub==0.25.2
