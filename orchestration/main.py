@@ -2,12 +2,11 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 import os
 
-from fastapi import FastAPI, Depends, UploadFile, File, Request
+from fastapi import FastAPI, Depends, UploadFile, File, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Union
 import base64
-import aiohttp
 
 from pydantic import BaseModel
 
@@ -25,43 +24,71 @@ supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
+
 class ImageInfoRequest(BaseModel):
     image_path: str
+
+
+class SignInRequest(BaseModel):
+    email: str
+    password: str
+
+
+class SignUpRequest(BaseModel):
+    email: str
+    password: str
+
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins, change to specific origins for better security
+    # Allow all origins, change to specific origins for better security
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
+
 
 @app.get("/")
 async def read_root():
     return "Hello world"
 
 # authentication
-@app.get("/sign_up")
-def sign_up():
-    res = supa.auth.sign_up(
-        {
-            "email":"testsupa@gmail.com",
-            "password":"testsupabasenow"
-        }
-    )
 
-    return res
+
+@app.post("/sign_up")
+def sign_up(sign_up_request: SignUpRequest):
+    try:
+        res = supa.auth.sign_up(
+            {
+                "email": sign_up_request.email,
+                "password": sign_up_request.password
+            }
+        )
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=e.message)
+
 
 @app.get("/sign_out")
 def sign_out():
     res = supa.auth.sign_out()
     return "success"
 
-@app.get("/sign_in")
-def sign_in():
-    res = supa.auth.sign_in_with_password({"email": "testsupa@gmail.com", "password": "testsupabasenow"})
-    return res
+
+@app.post("/sign_in")
+def sign_in(sign_in_request: SignInRequest):
+    try:
+        res = supa.auth.sign_in_with_password(
+            {
+                "email": sign_in_request.email,
+                "password": sign_in_request.password
+            })
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=e)
+
 
 @app.get("/anonymous_sign_in")
 def anonymous_sign_in():
@@ -69,80 +96,48 @@ def anonymous_sign_in():
     return res
 
 
-@app.get("/is_authenticated", dependencies=[Depends(JWTBearer())])
-def is_authenticated(request: Request):
+@app.get("/get_user", dependencies=[Depends(JWTBearer())])
+def get_user(request: Request):
     token = request.headers["authorization"]
     decoded_token = decode_jwt(token.removeprefix("Bearer "))
     return decoded_token
 
+
 @app.post("/upload_image", dependencies=[Depends(JWTBearer())])
 def upload_image(request: Request, file: UploadFile = File(...)):
-    file_name = file.filename
+    token = set_supabase_auth_to_user(request)
+    user_id = decode_jwt(token)["sub"]
+    extension, path = create_image_path(file)
     file_content = file.file.read()
-    token = request.headers["authorization"]
-    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
-    extension = file_name.split(".")[-1]
-    random_name = base64.urlsafe_b64encode(os.urandom(6)).decode("utf-8").rstrip("=")
-    path = f"{random_name}.{extension}"
 
     _ = supa.storage.from_('user-images').upload(
-                             file=file_content,
-                             path=f"{user_id}/{path}",
-                             file_options={"cache-control": "3600", "upsert": "false", 'content-type': f'image/{extension}'})
-
-    signed_url = supa.storage.from_("user-images").create_signed_url(
-      f"{user_id}/{path}", 60 * 5
-    )
+        file=file_content,
+        path=f"{user_id}/{path}",
+        file_options={"cache-control": "3600", "upsert": "false", 'content-type': f'image/{extension}'})
 
     return {"file_name": path}
-
-@app.get("/pose/{image_name}", dependencies=[Depends(JWTBearer())])
-async def pose(image_name: str, request: Request):
-    token = request.headers["authorization"]
-    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
-    signed_url = supa.storage.from_("user-images").create_signed_url(
-      f"{user_id}/{image_name}", 60 * 5
-    )
-    print(signed_url['signedURL'])
-
-    payload = {
-        "image_name": image_name,
-        "signed_url": signed_url['signedURL']
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post("http://create_pose:8000/prepare", json=payload) as response:
-            message = await response.json()
-
-    return message
-
-@app.get("/pose/{image_name}/{pose_id}", dependencies=[Depends(JWTBearer())])
-async def pose(image_name: str, pose_id: str, request: Request):
-    token = request.headers["authorization"]
-    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
-    signed_url = supa.storage.from_("user-images").create_signed_url(
-      f"{user_id}/{image_name}", 60 * 5
-    )
-
-    payload = {
-        "image_name": image_name,
-        "signed_url": signed_url['signedURL'],
-        "pose_id": pose_id,
-        "user_id": user_id
-    }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post("http://create_pose:8000/generate_pose", json=payload) as response:
-            image_info = await response.json()
-
-    return image_info
 
 
 @app.post('/signed_url', dependencies=[Depends(JWTBearer())])
 def signed_url(request: Request, item: ImageInfoRequest):
-    token = request.headers["authorization"]
-    user_id = decode_jwt(token.removeprefix("Bearer "))["sub"]
+    token = set_supabase_auth_to_user(request)
+    user_id = decode_jwt(token)["sub"]
     signed_url = supa.storage.from_("user-images").create_signed_url(
-      f"{user_id}/{item.image_path.split('/')[-1]}", 60 * 5
+        f"{user_id}/{item.image_path.split('/')[-1]}", 60 * 5
     )
     return signed_url
+
+
+def set_supabase_auth_to_user(request):
+    token = request.headers["authorization"].removeprefix("Bearer ")
+    supa.auth.set_session(token, 'dummy_refresh_token')
+    return token
+
+
+def create_image_path(file):
+    file_name = file.filename
+    extension = file_name.split(".")[-1]
+    random_name = base64.urlsafe_b64encode(
+        os.urandom(6)).decode("utf-8").rstrip("=")
+    path = f"{random_name}.{extension}"
+    return extension, path

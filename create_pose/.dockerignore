@@ -1,2 +1,2 @@
 #.Dockerignore
-.env
+scripts/.env
