@@ -75,7 +75,7 @@ after cloning the repo `cd` into the VirtualTryOn.API directoory
 `docker cp ./orchestration/.env virtualtryonapi-create_pose-1:/home/myuser/SMPLitex/scripts/` \
 `docker cp ./orchestration/.env virtualtryonapi-orchestration-1:/code/orchestration/` \
 `docker cp ./orchestration/.env virtualtryonapi-fit_garment-1:/code/fit_garment/` \
-7. attach a shell to the `orchestration` container and run `fastapi run orchestration/main.py --reload --port 80`
+7. attach a shell (example:`docker exec -it <container-name> bash`, use `docker ps` to get the container name) to the `orchestration` container and run `fastapi run orchestration/main.py --reload --port 80`
 8. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload`
 9. attach a shell to the `fit_garment` container and run `fastapi run /code/fit_garment/fit_garment_api.py --reload --port 80`
 10. You should now be able to open this on your host machine's browser by going to
