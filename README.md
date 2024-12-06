@@ -70,13 +70,13 @@ after cloning the repo `cd` into the VirtualTryOn.API directoory
 1. run `docker compose --profile download up` to download necessary files for the webui pipeline
 2. Download the necessary checkpoints for stableviton and put them in the correct folder of `/fit_garment`. See the links for download in the folder structure above /fit_garment/checkpoints
 3. Download the necessary checkpoints for smplitex and put them in the correct folder of `/create_pose`, the the link for the download of SGHM-ResNet50.pth in the folder structure above /create_pose/
-4. run `docker compose --profile orchestration --profile fit_garment --profile auto --profile create_pose --profile fit_garment watch` This will take a while
+4. run `docker compose --profile orchestration --profile auto --profile create_pose --profile fit_garment watch` This will take a while
 5. create an `.env` file with the secrets of supabase and duplicate it in `/create_pose/scripts` and `/orcehstration` folders within the docker containers. Because in the previous command you are doing a `watch`, when something is changed in the folder structure, it also changes your container's folder structure, so if you create the .env file in the two above folders and save them, they will be added to the containers. The other way is to use `docker cp` to copy files from host to the containers. for example: \
 `docker cp ./orchestration/.env virtualtryonapi-create_pose-1:/home/myuser/SMPLitex/scripts/` \
 `docker cp ./orchestration/.env virtualtryonapi-orchestration-1:/code/orchestration/` \
-`docker cp ./orchestration/.env virtualtryonapi-fit_garment-1:/code/fit_garment/` \
+`docker cp ./orchestration/.env virtualtryonapi-fit_garment-1:/code/fit_garment/`
 7. attach a shell (example:`docker exec -it <container-name> bash`, use `docker ps` to get the container name) to the `orchestration` container and run `fastapi run orchestration/main.py --reload --port 80`
-8. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload`
+8. attach a shell to the `create_pose` container and run `conda run -n smplitex --no-capture-output fastapi run app.py --reload --port 80`
 9. attach a shell to the `fit_garment` container and run `fastapi run /code/fit_garment/fit_garment_api.py --reload --port 80`
 10. You should now be able to open this on your host machine's browser by going to
     - http://0.0.0.0:8080/docs
