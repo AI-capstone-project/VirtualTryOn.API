@@ -1,5 +1,5 @@
 # Use the NVIDIA CUDA image as a base
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.04 AS builder
 
 # Install necessary dependencies
 RUN apt-get update -qq && apt-get install -y \
@@ -43,7 +43,7 @@ COPY --chown=myuser:myuser SGHM-ResNet50.pth .
 RUN mkdir -p ./scripts/SemanticGuidedHumanMatting/pretrained && \
     mv ./SGHM-ResNet50.pth ./scripts/SemanticGuidedHumanMatting/pretrained/
 
-FROM python:3.10.15-slim as runtime
+FROM python:3.10.15-slim AS runtime
 
 # Install necessary dependencies
 RUN apt-get update -qq && apt-get install -y \

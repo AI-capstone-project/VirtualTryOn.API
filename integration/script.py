@@ -2,12 +2,12 @@ import requests
 import json
 
 # Base URLs for the services
-# BASE_URL_AUTH = 'http://0.0.0.0:8080'
-BASE_URL_AUTH = 'https://bb20-142-188-53-176.ngrok-free.app'
-# BASE_URL_FIT = 'http://0.0.0.0:8081'
-BASE_URL_FIT = 'https://b3be-142-188-53-176.ngrok-free.app'
-# BASE_URL_GENERATE = 'http://0.0.0.0:8082'
-BASE_URL_GENERATE = 'https://f597-142-188-53-176.ngrok-free.app'
+BASE_URL_AUTH = 'http://127.0.0.1:8080'
+BASE_URL_FIT = 'http://127.0.0.1:8081'
+BASE_URL_GENERATE = 'http://127.0.0.1:8082'
+# BASE_URL_AUTH = 'https://bb20-142-188-53-176.ngrok-free.app'
+# BASE_URL_FIT = 'https://b3be-142-188-53-176.ngrok-free.app'
+# BASE_URL_GENERATE = 'https://f597-142-188-53-176.ngrok-free.app'
 
 # User credentials
 email = "testuser@virtualtryon.com"
