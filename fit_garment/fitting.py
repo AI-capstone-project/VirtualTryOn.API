@@ -1,3 +1,5 @@
+""" See below for the parts that are changed by us"""
+
 from utils_stableviton import get_mask_location, get_batch, tensor2img, center_crop
 from cldm.plms_hacked import PLMSSampler
 from cldm.model import create_model
@@ -46,7 +48,10 @@ params = config.model.params
 # model.eval()
 # sampler2 = PLMSSampler(model)
 
-
+"""
+We extracted the image processing in the below code,
+but rest of the code is taken from https://huggingface.co/spaces/rlawjdghek/StableVITON/blob/main/app.py
+"""
 def stable_viton_model_hd(
         batch,
         n_steps,

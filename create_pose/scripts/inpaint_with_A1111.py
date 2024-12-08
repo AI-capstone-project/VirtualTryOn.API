@@ -1,3 +1,10 @@
+"""
+View the below link to know which parts we have changed
+https://github.com/AI-capstone-project/Docker-SMPLitex/blame/main/scripts/inpaint_with_A1111.py
+The parts by sinapy are the ones that we have changed
+There is only 1 => it's to reduce the number of inpainted images to 1 for performance
+"""
+
 import os
 import argparse
 import numpy as np
@@ -13,11 +20,11 @@ class InpaintWithA1111:
         self.output_folder = output_folder
 
         # WARNING: You have to activate Automatic1111 API before:
-        #   ~/stable-diffusion-webui$ ./webui.sh --disable-safe-unpickle --api     
+        #   ~/stable-diffusion-webui$ ./webui.sh --disable-safe-unpickle --api
         self.sd_api = StableDiffusionAPI()
 
         if not os.path.exists(self.output_folder):
-            os.makedirs(self.output_folder) 
+            os.makedirs(self.output_folder)
 
     def inpaint_texture(self, partial_texture_path, mask_path, cfg = 2.0, denoising_strength = 0.8):
 
@@ -26,14 +33,14 @@ class InpaintWithA1111:
             now = datetime.now() # current date and time
             date_time = now.strftime("%m%d%Y-%H%M%S")
 
-            #   loads image 
+            #   loads image
             try:
                 im = Image.open(partial_texture_path)
             except IOError:
                 print("ERROR: could not open ", partial_texture_path)
 
-            #   loads mask 
-            try:    
+            #   loads mask
+            try:
                 im_mask = Image.open(mask_path)
             except IOError:
                 print("ERROR: could not open ", mask_path)
@@ -52,17 +59,17 @@ class InpaintWithA1111:
             im_mask = im_mask.convert("L").filter(ImageFilter.MaxFilter(5)).convert("P")
 
             # inpaints intput image (notice it will generate #batch_size versions)
-            inpainted_result = self.sd_api.img2img("a sks texturemap", 
-                                    images = [im], 
+            inpainted_result = self.sd_api.img2img("a sks texturemap",
+                                    images = [im],
                                     batch_size = 1,
-                                    mask_image = im_mask, 
+                                    mask_image = im_mask,
                                     cfg_scale = cfg,
                                     denoising_strength = denoising_strength,
-                                    restore_faces = True,  
-                                    width = 512,            
-                                    height = 512,           
+                                    restore_faces = True,
+                                    width = 512,
+                                    height = 512,
                                     )
-            
+
             # for each inpainted sample (i.e. as many as the batch size) we do an img2img pass to improve quality
             for idx, inpainted_image in enumerate(inpainted_result.images):
 
@@ -70,27 +77,27 @@ class InpaintWithA1111:
                 # output_filename = current_texture_filename.replace(".png", "_inpaint-" + str(idx).zfill(3) + "_cfg" + str(cfg) + "_" + date_time  + ".png")
                 # output_filename_path = os.path.join(self.output_folder, output_filename)
                 # inpainted_image.save(output_filename_path)
-                
-                # img2img 
-                img2img_result = self.sd_api.img2img("a sks texturemap", 
+
+                # img2img
+                img2img_result = self.sd_api.img2img("a sks texturemap",
                                     images = [inpainted_image],
-                                    steps=20, 
+                                    steps=20,
                                     cfg_scale = 2, # 1 or 2
                                     batch_size = 1,
                                     denoising_strength = 0.05, # 0.05 or 0.1
-                                    restore_faces = True, 
-                                    width = 512,            
-                                    height = 512,           
-                                    ) 
-            
+                                    restore_faces = True,
+                                    width = 512,
+                                    height = 512,
+                                    )
+
                 # saves each img2img-ed inpainted result
                 for idx2, img2img_current_result in enumerate(img2img_result.images):
                     img2img_filename = current_texture_filename.replace(".png", "_inpaint-" + str(idx).zfill(3) + "_img2img-" + str(idx2).zfill(3) + "_cfg" + str(cfg)+ "_" + date_time +".png")
                     output_img2img_filename_path = os.path.join(self.output_folder, img2img_filename)
                     img2img_current_result.save(output_img2img_filename_path)
-                
+
     def inpaint_folder(self):
-        
+
         #   extract list of texture files
         if os.path.exists(self.partial_texture_folder):
             files = os.listdir(self.partial_texture_folder)
@@ -109,16 +116,16 @@ class InpaintWithA1111:
         texture_file_paths.sort()
 
         for idx, current_texture_file_path in enumerate(texture_file_paths):
-            
+
             print(idx+1, '/', len(texture_file_paths) ,'   Processing image ', current_texture_file_path )
-            
+
             # current mask filename
-            mask_filename = os.path.basename(current_texture_file_path).replace(".png", "_mask.png") 
+            mask_filename = os.path.basename(current_texture_file_path).replace(".png", "_mask.png")
 
             # current mask filepath
             current_mask_file_path = os.path.join(self.masks_folder, mask_filename)
-         
-            # inpaints current texture   
+
+            # inpaints current texture
             self.inpaint_texture(current_texture_file_path, current_mask_file_path)
 
 parser = argparse.ArgumentParser(description= 'Inpaints partial texturemaps')

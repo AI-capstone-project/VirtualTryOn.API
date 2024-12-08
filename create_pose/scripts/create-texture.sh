@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script was purely made by the team
+
 # Add an ID argument
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <ID>"

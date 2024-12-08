@@ -1,3 +1,7 @@
+"""
+We did not add this file
+"""
+
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw
@@ -177,7 +181,7 @@ def get_tensor(img, h, w, is_mask=False):
     else:
         img = (img < 128).astype(np.float32)[:,:,None]
     return torch.from_numpy(img)[None].cuda()
-    
+
 def get_batch(image, cloth, densepose, agn_img, agn_mask, img_h, img_w):
     batch = dict()
     batch["image"] = get_tensor(image, img_h, img_w)
