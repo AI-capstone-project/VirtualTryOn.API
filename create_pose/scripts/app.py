@@ -129,40 +129,39 @@ async def create_all_pose(request: Request, item: GenerateAllPoseItemRequest):
 
     user_id = decode_jwt(token)["sub"]
     extension = item.image_name.split(".")[-1]
-    path = f"{user_id}/{item.image_name.removesuffix(f'.{extension}')}-POSEID-{item.pose_id}-360.gif"
-
+    
     res = []
     for i in range(1, 4):
-            item = {"image_name": item.image_name, "pose_id": i}
-            return_code = generate_pose(item)
+        pose_item = GeneratePoseItemRequest(image_name=item.image_name, pose_id=i)
+        
+        path = f"{user_id}/{item.image_name.removesuffix(f'.{extension}')}-POSEID-{pose_item.pose_id}-360.gif"
 
-            insert_log(local_supa, "create_all_pose", {
-                "status_code": return_code, "pose_id": item.pose_id})
+        return_code = generate_pose(pose_item)
 
-            if return_code != 0:
-                raise HTTPException(status_code=500, detail="3D try-on script failed")
+        insert_log(local_supa, "create_pose", {
+            "status_code": return_code, "pose_id": pose_item.pose_id})
 
-            # load the image and return it
-            image_path = find_pose_path_from_file_system(item, extension)
+        if return_code != 0:
+            raise HTTPException(status_code=500, detail="3D try-on script failed")
+
+        # load the image and return it
+        image_path = find_pose_path_from_file_system(pose_item, extension)
+        try:
+            with open(image_path, "rb") as f:
+                image = f.read()
+
             try:
-                with open(image_path, "rb") as f:
-                    image = f.read()
-
-                try:
-                    res[i] = local_supa.storage.from_("user-images").upload(
-                        file=image,
-                        path=path,
-                        file_options={"cache-control": "3600",
-                                    "upsert": "true", 'content-type': 'image/gif'}
-                    )
-                except Exception as e:
-                    raise HTTPException(
-                        status_code=500, detail="Failed to upload image from server to storage service")
-            except:
-                HTTPException(status_code=500,
-                            detail="Failed to read image from server")
-
-    print(f"{res=}")
+                upload_response = local_supa.storage.from_("user-images").upload(
+                    file=image,
+                    path=path,
+                    file_options={"cache-control": "3600",
+                                  "upsert": "true", 'content-type': 'image/gif'}
+                )
+                res.append(upload_response)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=str(e))
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Image not found")
 
     return res
 
