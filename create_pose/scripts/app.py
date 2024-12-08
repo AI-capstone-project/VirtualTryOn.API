@@ -42,6 +42,9 @@ class GeneratePoseItemRequest(BaseModel):
     image_name: str | None = None
     pose_id: int | None = None
 
+class GenerateAllPoseItemRequest(BaseModel):
+    image_name: str | None = None
+
 
 class SignInRequest(BaseModel):
     email: str
@@ -114,6 +117,50 @@ async def create_pose(request: Request, item: GeneratePoseItemRequest):
     except:
         HTTPException(status_code=500,
                       detail="Failed to read image from server")
+
+    print(f"{res=}")
+
+    return res
+
+@app.post("/generate_all_pose", dependencies=[Depends(JWTBearer())])
+async def create_all_pose(request: Request, item: GenerateAllPoseItemRequest):
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
+
+    user_id = decode_jwt(token)["sub"]
+    extension = item.image_name.split(".")[-1]
+    path = f"{user_id}/{item.image_name.removesuffix(f'.{extension}')}-POSEID-{item.pose_id}-360.gif"
+
+    res = []
+    for i in range(1, 4):
+            item = {"image_name": item.image_name, "pose_id": i}
+            return_code = generate_pose(item)
+
+            insert_log(local_supa, "create_all_pose", {
+                "status_code": return_code, "pose_id": item.pose_id})
+
+            if return_code != 0:
+                raise HTTPException(status_code=500, detail="3D try-on script failed")
+
+            # load the image and return it
+            image_path = find_pose_path_from_file_system(item, extension)
+            try:
+                with open(image_path, "rb") as f:
+                    image = f.read()
+
+                try:
+                    res[i] = local_supa.storage.from_("user-images").upload(
+                        file=image,
+                        path=path,
+                        file_options={"cache-control": "3600",
+                                    "upsert": "true", 'content-type': 'image/gif'}
+                    )
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500, detail="Failed to upload image from server to storage service")
+            except:
+                HTTPException(status_code=500,
+                            detail="Failed to read image from server")
 
     print(f"{res=}")
 
