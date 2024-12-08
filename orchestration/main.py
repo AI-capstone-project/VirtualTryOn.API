@@ -11,7 +11,7 @@ import base64
 from pydantic import BaseModel
 
 from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
-from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user, insert_log
 from virtualtryon_api_common.fastapi_helper import get_token_from_request
 
 load_dotenv()
@@ -123,11 +123,7 @@ def upload_image(request: Request, file: UploadFile = File(...)):
         path=f"{user_id}/{path}",
         file_options={"cache-control": "3600", "upsert": "false", 'content-type': f'image/{extension}'})
 
-    res = local_supa.table('Log').insert(
-      {"Activity": "upload_image", "message": {"image_path": path}}
-      , returning='minimal').execute()
-
-
+    insert_log(local_supa, "upload_image", {"image_path": path})
 
     return {"file_name": path}
 

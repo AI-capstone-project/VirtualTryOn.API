@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 from supabase import Client
 from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
-from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user, insert_log
 from virtualtryon_api_common.fastapi_helper import get_token_from_request
 from pydantic import BaseModel
 
@@ -65,9 +65,7 @@ async def read_root(request: Request, json: PrepareItemRequest):
     print(f"Downloaded {json.image_name} from {supabase_image_path}")
     return_code = prepare_texture_for_the_last_image_added_to_file_system()
 
-    _ = local_supa.table('Log').insert(
-      {"Activity": "prepare_texture", "message": {"status_code": return_code}}
-      , returning='minimal').execute()
+    insert_log(local_supa, "prepare_texture", {"status_code": return_code})
 
     if return_code != 0:
         raise HTTPException(status_code=500, detail="3D try-on script failed")
@@ -90,9 +88,8 @@ async def create_pose(request: Request, item: GeneratePoseItemRequest):
 
     return_code = generate_pose(item)
 
-    _ = local_supa.table('Log').insert(
-      {"Activity": "create_pose", "message": {"status_code": return_code, "pose_id": item.pose_id}}
-      , returning='minimal').execute()
+    insert_log(local_supa, "create_pose", {
+               "status_code": return_code, "pose_id": item.pose_id})
 
     if return_code != 0:
         raise HTTPException(status_code=500, detail="3D try-on script failed")

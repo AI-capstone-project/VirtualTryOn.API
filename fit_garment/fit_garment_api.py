@@ -9,7 +9,7 @@ from fitting import process_hd
 import io
 from PIL import Image
 from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
-from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user, insert_log
 from virtualtryon_api_common.fastapi_helper import get_token_from_request
 
 load_dotenv()
@@ -67,9 +67,7 @@ async def fit_garment(request: Request, json: FitGarmentRequest):
                       "upsert": "true", 'content-type': 'image/png'}
     )
 
-    _ = local_supa.table('Log').insert(
-      {"Activity": "fit_garment", "message": {"image_path": response.path}}
-      , returning='minimal').execute()
+    insert_log(local_supa, "fit_garment", {"image_path": response.path})
 
     return response
 
