@@ -4,6 +4,7 @@ from cldm.model import create_model
 from preprocess.DensePose.apply_net_gradio import DensePose4Gradio
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
+from preprocess.image_helper import ImagePreprocessor
 
 import sys
 import time
@@ -94,16 +95,17 @@ def process_hd(vton_img, garm_img, n_steps):
     stt = time.time()
     print('load images... ', end='')
 
-    vton_img = center_crop(vton_img)
-    garm_img = garm_img.resize((IMG_W, IMG_H))
-    vton_img = vton_img.resize((IMG_W, IMG_H))
+    preprocessor = ImagePreprocessor(IMG_W, IMG_H)
+
+    vton_img = preprocessor.process_vton_image(vton_img)
+    garm_img = preprocessor.process_garm_image(garm_img)
 
     print('%.2fs' % (time.time() - stt))
 
     stt = time.time()
     print('get agnostic map... ', end='')
-    keypoints = openpose_model_hd(vton_img.resize((IMG_W, IMG_H)))
-    model_parse, _ = parsing_model_hd(vton_img.resize((IMG_W, IMG_H)))
+    keypoints = openpose_model_hd(vton_img)
+    model_parse, _ = parsing_model_hd(vton_img)
     mask, mask_gray = get_mask_location(
         model_type, category_dict_utils[category], model_parse, keypoints, radius=5)
     mask = mask.resize((IMG_W, IMG_H), Image.NEAREST)
