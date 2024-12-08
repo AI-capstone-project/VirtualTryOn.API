@@ -59,15 +59,11 @@ tomli==2.0.1
 tqdm==4.66.1
 trimesh==4.0.5
 triton==2.1.0
-typing_extensions==4.8.0
+typing_extensions
 urllib3==2.1.0
 uvtextureconverter==1.2.0
 yacs==0.1.8
 zipp==3.17.0
-fastapi[standard]>=0.113.0,<0.114.0
-pydantic>=2.7.0,<3.0.0
-supabase
-auth
-PyJWT
+virtualtryon_api_common==0.1.8
 python-decouple
 python-dotenv

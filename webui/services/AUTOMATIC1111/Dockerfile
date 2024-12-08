@@ -1,6 +1,6 @@
 FROM alpine/git:2.36.2 AS download
 
-RUN git config --global http.version HTTP/1.1 && git config --global http.postBuffer 2038505904
+RUN git config --global http.version HTTP/1.1 && git config --global http.postBuffer 2038644904
 
 COPY clone.sh /clone.sh
 
