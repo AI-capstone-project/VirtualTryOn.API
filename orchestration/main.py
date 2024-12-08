@@ -10,7 +10,9 @@ import base64
 
 from pydantic import BaseModel
 
-from authentication.jwt_helpers import JWTBearer, decode_jwt
+from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.fastapi_helper import get_token_from_request
 
 load_dotenv()
 
@@ -21,6 +23,9 @@ SUPABASE_URL: str = os.getenv("SUPABASE_URL")
 SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
 
 supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+init_jwt_config(JWT_SECRET, JWT_ALGORITHM)
+init_supabase_config(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
@@ -71,9 +76,11 @@ def sign_up(sign_up_request: SignUpRequest):
         raise HTTPException(status_code=400, detail=e.message)
 
 
-@app.get("/sign_out")
-def sign_out():
-    res = supa.auth.sign_out()
+@app.get("/sign_out", dependencies=[Depends(JWTBearer())])
+def sign_out(request: Request):
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
+    res = local_supa.auth.sign_out()
     return "success"
 
 
@@ -98,41 +105,42 @@ def anonymous_sign_in():
 
 @app.get("/get_user", dependencies=[Depends(JWTBearer())])
 def get_user(request: Request):
-    token = request.headers["authorization"]
-    decoded_token = decode_jwt(token.removeprefix("Bearer "))
+    token = get_token_from_request(request)
+    decoded_token = decode_jwt(token)
     return decoded_token
 
 
 @app.post("/upload_image", dependencies=[Depends(JWTBearer())])
 def upload_image(request: Request, file: UploadFile = File(...)):
-    token = set_supabase_auth_to_user(request)
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
     user_id = decode_jwt(token)["sub"]
     extension, path = create_image_path(file)
     file_content = file.file.read()
 
-    _ = supa.storage.from_('user-images').upload(
+    _ = local_supa.storage.from_('user-images').upload(
         file=file_content,
         path=f"{user_id}/{path}",
         file_options={"cache-control": "3600", "upsert": "false", 'content-type': f'image/{extension}'})
+
+    res = local_supa.table('Log').insert(
+      {"Activity": "upload_image", "message": {"image_path": path}}
+      , returning='minimal').execute()
+
+
 
     return {"file_name": path}
 
 
 @app.post('/signed_url', dependencies=[Depends(JWTBearer())])
 def signed_url(request: Request, item: ImageInfoRequest):
-    token = set_supabase_auth_to_user(request)
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
     user_id = decode_jwt(token)["sub"]
-    signed_url = supa.storage.from_("user-images").create_signed_url(
+    signed_url = local_supa.storage.from_("user-images").create_signed_url(
         f"{user_id}/{item.image_path.split('/')[-1]}", 60 * 5
     )
     return signed_url
-
-
-def set_supabase_auth_to_user(request):
-    token = request.headers["authorization"].removeprefix("Bearer ")
-    supa.auth.set_session(token, 'dummy_refresh_token')
-    return token
-
 
 def create_image_path(file):
     file_name = file.filename

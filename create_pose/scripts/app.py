@@ -4,8 +4,10 @@ from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
-from supabase import create_client, Client
-from jwt_helpers import JWTBearer, decode_jwt
+from supabase import Client
+from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.fastapi_helper import get_token_from_request
 from pydantic import BaseModel
 
 load_dotenv()
@@ -16,7 +18,8 @@ JWT_ALGORITHM: str = "HS256"
 SUPABASE_URL: str = os.getenv("SUPABASE_URL")
 SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
 
-supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+init_jwt_config(JWT_SECRET, JWT_ALGORITHM)
+init_supabase_config(SUPABASE_URL, SUPABASE_KEY)
 
 
 app = FastAPI()
@@ -52,14 +55,19 @@ class SignUpRequest(BaseModel):
 
 @app.post("/prepare", dependencies=[Depends(JWTBearer())])
 async def read_root(request: Request, json: PrepareItemRequest):
-    token = set_supabase_auth_to_user(request)
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
     user_id = decode_jwt(token)["sub"]
 
     # Save the file to the desired location
-    supabase_image_path = save_image_in_file_system(json, user_id)
+    supabase_image_path = save_image_in_file_system(local_supa, json, user_id)
 
     print(f"Downloaded {json.image_name} from {supabase_image_path}")
     return_code = prepare_texture_for_the_last_image_added_to_file_system()
+
+    _ = local_supa.table('Log').insert(
+      {"Activity": "prepare_texture", "message": {"status_code": return_code}}
+      , returning='minimal').execute()
 
     if return_code != 0:
         raise HTTPException(status_code=500, detail="3D try-on script failed")
@@ -69,12 +77,22 @@ async def read_root(request: Request, json: PrepareItemRequest):
 
 @app.post("/generate_pose", dependencies=[Depends(JWTBearer())])
 async def create_pose(request: Request, item: GeneratePoseItemRequest):
-    token = set_supabase_auth_to_user(request)
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
+
+    if item.pose_id not in range(1, 4):
+        raise HTTPException(
+            status_code=400, detail="Pose ID should be between 1 and 3")
+
     user_id = decode_jwt(token)["sub"]
     extension = item.image_name.split(".")[-1]
     path = f"{user_id}/{item.image_name.removesuffix(f'.{extension}')}-POSEID-{item.pose_id}-360.gif"
 
     return_code = generate_pose(item)
+
+    _ = local_supa.table('Log').insert(
+      {"Activity": "create_pose", "message": {"status_code": return_code, "pose_id": item.pose_id}}
+      , returning='minimal').execute()
 
     if return_code != 0:
         raise HTTPException(status_code=500, detail="3D try-on script failed")
@@ -86,7 +104,7 @@ async def create_pose(request: Request, item: GeneratePoseItemRequest):
             image = f.read()
 
         try:
-            res = supa.storage.from_("user-images").upload(
+            res = local_supa.storage.from_("user-images").upload(
                 file=image,
                 path=path,
                 file_options={"cache-control": "3600",
@@ -135,13 +153,7 @@ def find_pose_path_from_file_system(item, extension):
     return image_path
 
 
-def set_supabase_auth_to_user(request):
-    token = request.headers["authorization"].removeprefix("Bearer ")
-    supa.auth.set_session(token, 'dummy_refresh_token')
-    return token
-
-
-def save_image_in_file_system(json, user_id):
+def save_image_in_file_system(supa: Client, json, user_id):
     image_path = f"/home/myuser/SMPLitex/scripts/dummy_data/stableviton-created_images/{json.image_name}"
     supabase_image_path = f"{user_id}/{json.image_name}"
     with open(image_path, "wb+") as f:

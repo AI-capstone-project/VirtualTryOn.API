@@ -1,7 +1,6 @@
 
 from pydantic import BaseModel
-from authentication.jwt_helpers import JWTBearer, decode_jwt
-from supabase import create_client, Client
+from supabase import Client
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +8,9 @@ from fastapi import FastAPI, Depends, Request
 from fitting import process_hd
 import io
 from PIL import Image
+from virtualtryon_api_common.jwt_helper import JWTBearer, decode_jwt, init_jwt_config
+from virtualtryon_api_common.supabase_helper import init_supabase_config, set_supabase_auth_to_user
+from virtualtryon_api_common.fastapi_helper import get_token_from_request
 
 load_dotenv()
 
@@ -18,7 +20,8 @@ JWT_ALGORITHM: str = "HS256"
 SUPABASE_URL: str = os.getenv("SUPABASE_URL")
 SUPABASE_KEY: str = os.getenv("SUPABASE_KEY")
 
-supa: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+init_jwt_config(JWT_SECRET, JWT_ALGORITHM)
+init_supabase_config(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
@@ -40,13 +43,14 @@ class FitGarmentRequest(BaseModel):
 
 @app.post("/fit_garment", dependencies=[Depends(JWTBearer())])
 async def fit_garment(request: Request, json: FitGarmentRequest):
-    token = set_supabase_auth_to_user(request)
+    token = get_token_from_request(request)
+    local_supa = set_supabase_auth_to_user(token)
     user_id = decode_jwt(token)["sub"]
 
     pil_model_image = convert_blob_to_pillow_image(
-        json.model_image_path, user_id)
+        local_supa, json.model_image_path, user_id)
     pil_garment_image = convert_blob_to_pillow_image(
-        json.garment_image_path, user_id)
+        local_supa, json.garment_image_path, user_id)
 
     n_steps = json.n_steps
 
@@ -56,12 +60,16 @@ async def fit_garment(request: Request, json: FitGarmentRequest):
 
     fitted_garment_image_name = f"fitted_garment_{n_steps}_{json.model_image_path.split('.')[0]}_{json.garment_image_path.split('.')[0]}.png"
 
-    response = supa.storage.from_("user-images").upload(
+    response = local_supa.storage.from_("user-images").upload(
         f"{user_id}/{fitted_garment_image_name}",
         output_image_bytes,
         file_options={"cache-control": "3600",
                       "upsert": "true", 'content-type': 'image/png'}
     )
+
+    _ = local_supa.table('Log').insert(
+      {"Activity": "fit_garment", "message": {"image_path": response.path}}
+      , returning='minimal').execute()
 
     return response
 
@@ -72,14 +80,7 @@ def convert_pillow_image_to_bytes(output_image):
     output_image_bytes = output_image_stream.getvalue()
     return output_image_bytes
 
-
-def set_supabase_auth_to_user(request):
-    token = request.headers["authorization"].removeprefix("Bearer ")
-    supa.auth.set_session(token, 'dummy_refresh_token')
-    return token
-
-
-def convert_blob_to_pillow_image(file_name: str, user_id: str) -> Image:
+def convert_blob_to_pillow_image(supa: Client, file_name: str, user_id: str) -> Image:
     supabase_path = f"{user_id}/{file_name}"
     image_bytes = supa.storage.from_("user-images").download(
         path=supabase_path

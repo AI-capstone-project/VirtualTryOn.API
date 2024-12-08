@@ -2,16 +2,41 @@ import requests
 import json
 
 # Base URLs for the services
-BASE_URL_AUTH = 'http://127.0.0.1:8080'
-BASE_URL_FIT = 'http://127.0.0.1:8081'
-BASE_URL_GENERATE = 'http://127.0.0.1:8082'
-# BASE_URL_AUTH = 'https://bb20-142-188-53-176.ngrok-free.app'
-# BASE_URL_FIT = 'https://b3be-142-188-53-176.ngrok-free.app'
-# BASE_URL_GENERATE = 'https://f597-142-188-53-176.ngrok-free.app'
+# BASE_URL_AUTH = 'http://0.0.0.0:8080'
+# BASE_URL_FIT = 'http://0.0.0.0:8081'
+# BASE_URL_GENERATE = 'http://0.0.0.0:8082'
+# BASE_URL_AUTH = 'https://sbb81xkq-8080.use.devtunnels.ms'
+# BASE_URL_FIT = 'https://sbb81xkq-8081.use.devtunnels.ms'
+# BASE_URL_GENERATE = 'https://sbb81xkq-8082.use.devtunnels.ms'
+# BASE_URL_AUTH = 'http://127.0.0.1:8080'
+# BASE_URL_FIT = 'http://127.0.0.1:8081'
+# BASE_URL_GENERATE = 'http://127.0.0.1:8082'
+BASE_URL_AUTH = 'https://aa80-142-188-53-176.ngrok-free.app'
+BASE_URL_FIT = 'https://acca-142-188-53-176.ngrok-free.app'
+BASE_URL_GENERATE = 'https://e4d7-142-188-53-176.ngrok-free.app'
 
+# https://aa80-142-188-53-176.ngrok-free.app -> http://localhost:8080                        │
+# https://acca-142-188-53-176.ngrok-free.app -> http://localhost:8081                        │
+# https://e4d7-142-188-53-176.ngrok-free.app -> http://localhost:8082
 # User credentials
 email = "testuser@virtualtryon.com"
 password = "testpassword"
+
+
+def sign_in():
+    url = f"{BASE_URL_AUTH}/sign_in"
+    payload = {
+        "email": email,
+        "password": password
+    }
+    headers = {'accept': 'application/json',
+               'Content-Type': 'application/json'}
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()  # Raise an exception for HTTP errors
+    data = response.json()
+    print("Sign-in response:", data)
+    return data['session']['access_token']
+
 
 def sign_up():
     url = f"{BASE_URL_AUTH}/sign_up"
@@ -19,12 +44,14 @@ def sign_up():
         "email": email,
         "password": password
     }
-    headers = {'accept': 'application/json', 'Content-Type': 'application/json'}
+    headers = {'accept': 'application/json',
+               'Content-Type': 'application/json'}
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()  # Raise an exception for HTTP errors
     data = response.json()
     print("Sign-up response:", data)
     return data['session']['access_token']
+
 
 def anonymous_sign_in():
     url = f"{BASE_URL_AUTH}/anonymous_sign_in"
@@ -34,6 +61,7 @@ def anonymous_sign_in():
     data = response.json()
     print("Anonymous sign-in response:", data)
     return data['session']['access_token']
+
 
 def upload_image(token, file_path):
     url = f"{BASE_URL_AUTH}/upload_image"
@@ -47,6 +75,7 @@ def upload_image(token, file_path):
     data = response.json()
     print("Upload image response:", data)
     return data['file_name']
+
 
 def fit_garment(token, model_image_path, garment_image_path, n_steps=20):
     url = f"{BASE_URL_FIT}/fit_garment"
@@ -66,6 +95,7 @@ def fit_garment(token, model_image_path, garment_image_path, n_steps=20):
     print("Fit garment response:", data)
     return data['path'].split('/')[-1]
 
+
 def prepare_image(token, image_name):
     url = f"{BASE_URL_GENERATE}/prepare"
     headers = {
@@ -79,6 +109,7 @@ def prepare_image(token, image_name):
     data = response.json()
     print("Prepare image response:", data)
     return data
+
 
 def generate_pose(token, image_name, pose_id=1):
     url = f"{BASE_URL_GENERATE}/generate_pose"
@@ -95,7 +126,8 @@ def generate_pose(token, image_name, pose_id=1):
     response.raise_for_status()
     data = response.json()
     print("Generate pose response:", data)
-    return data['Key'].split('/')[-1]
+    return data['path'].split('/')[-1]
+
 
 def get_signed_url(token, image_path):
     url = f"{BASE_URL_AUTH}/signed_url"
@@ -111,22 +143,28 @@ def get_signed_url(token, image_path):
     print("Signed URL response:", data)
     return data
 
+
 def main():
     # Step 1: Sign up or anonymous sign-in to get the token
     try:
-        token = sign_up()
+        token = sign_in()
     except requests.exceptions.HTTPError:
         print("User already exists, trying anonymous sign-in.")
         token = anonymous_sign_in()
 
     # Step 2: Upload model image
-    model_image_path = upload_image(token, 'integration/examples/model/04913_00.jpg')  # Replace with your model image path
+    # Replace with your model image path
+    model_image_path = upload_image(
+        token, 'integration/examples/model/04913_00.jpg')
 
     # Step 3: Upload garment image
-    garment_image_path = upload_image(token, 'integration/examples/model/04913_00.jpg')  # Replace with your garment image path
+    # Replace with your garment image path
+    garment_image_path = upload_image(
+        token, 'integration/examples/garment/00470_00.jpg')
 
     # Step 4: Fit garment
-    fitted_image_name = fit_garment(token, model_image_path, garment_image_path)
+    fitted_image_name = fit_garment(
+        token, model_image_path, garment_image_path)
 
     # Step 5: Prepare image
     prepare_image(token, fitted_image_name)
@@ -137,6 +175,7 @@ def main():
     # Step 7: Get signed URL
     signed_url_data = get_signed_url(token, posed_image_name)
     print("Final signed URL:", signed_url_data['signedURL'])
+
 
 if __name__ == "__main__":
     main()
