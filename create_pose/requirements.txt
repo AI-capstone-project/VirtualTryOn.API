@@ -64,6 +64,6 @@ urllib3==2.1.0
 uvtextureconverter==1.2.0
 yacs==0.1.8
 zipp==3.17.0
-virtualtryon_api_common==0.1.7
+virtualtryon_api_common==0.1.8
 python-decouple
 python-dotenv

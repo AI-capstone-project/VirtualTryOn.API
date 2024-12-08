@@ -20,7 +20,7 @@ hydra-core
 pycocotools
 git+https://github.com/facebookresearch/detectron2.git
 git+https://github.com/facebookresearch/detectron2@main#subdirectory=projects/DensePose
-virtualtryon_api_common
+virtualtryon_api_common==0.1.8
 python-decouple
 python-dotenv
 huggingface_hub==0.25.2
