@@ -1,7 +1,4 @@
-from http.client import HTTPException
-
-from fastapi import FastAPI
-
+import glob
 import subprocess
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -127,35 +124,15 @@ def generate_pose(item):
     process.stdout.close()
     process.stderr.close()
     return_code = process.wait()
-    return return_code
 
+    if return_code != 0:
+        raise HTTPException(status_code=500, detail="3D try-on script failed")
 
-def find_pose_path_from_file_system(item, extension):
-    image_name_without_extension = item.image_name.removesuffix(
-        f".{extension}")
-    image_path_pattern = f"/home/myuser/SMPLitex/scripts/dummy_data/3d_outputs/{image_name_without_extension}_*POSEID-{item.pose_id}-360.gif"
-    matching_files = glob.glob(image_path_pattern)
-    if not matching_files:
-        raise HTTPException(
-            status_code=404, detail=f"Image with path {image_path_pattern} not found")
-    image_path = matching_files[0]
-    return image_path
+    return {"message": "3D try-on script executed"}
 
-
-def save_image_in_file_system(supa: Client, json, user_id):
-    image_path = f"/home/myuser/SMPLitex/scripts/dummy_data/stableviton-created_images/{json.image_name}"
-    supabase_image_path = f"{user_id}/{json.image_name}"
-    with open(image_path, "wb+") as f:
-        response = supa.storage.from_("user-images").download(
-            path=supabase_image_path
-        )
-        f.write(response)
-    return supabase_image_path
-
-
-def prepare_texture_for_the_last_image_added_to_file_system():
-    process = subprocess.Popen(["sh", "/home/myuser/SMPLitex/scripts/create-texture.sh",
-                                str(id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+@app.get("/pose/{id:int}/{pose_id:int}")
+async def create_pose(id: int, pose_id: int):
+    process = subprocess.Popen(["sh", "/home/myuser/SMPLitex/scripts/3d-render.sh", str(id), str(pose_id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     # Print stdout line by line
     for stdout_line in iter(process.stdout.readline, ""):

@@ -8,4 +8,6 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY . /code/orchestration
 
-CMD ["fastapi", "run", "orchestration/main.py", "--reload", "--port", "80"]
+# The following command should be run after copying the .env file into the orchestration folder
+# CMD ["fastapi", "run", "orchestration/main.py", "--reload", "--port", "80"]
+# fastapi run orchestration/main.py --reload --port 80

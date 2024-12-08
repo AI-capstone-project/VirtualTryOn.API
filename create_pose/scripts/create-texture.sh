@@ -9,16 +9,6 @@ fi
 # Set the ID
 ID=$1
 
-# If a file with the name SMPLitex-v1.0.ckpt is not in 
-# /home/myuser/SMPLitex/scripts/stable-diffusion-webui/stable-diffusion-webui/models/Stable-diffusion/ directory, 
-# then copy the file from /home/myuser/SMPLitex/scripts/stable-diffusion-webui/models/Stable-diffusion/ to 
-# /home/myuser/SMPLitex/scripts/stable-diffusion-webui/stable-diffusion-webui/models/Stable-diffusion/
-echo "Copying Stable-diffusion model..."
-if [ ! -f /home/myuser/SMPLitex/scripts/stable-diffusion-webui/stable-diffusion-webui/models/Stable-diffusion/SMPLitex-v1.0.ckpt ]; then
-    rm /home/myuser/SMPLitex/scripts/stable-diffusion-webui/stable-diffusion-webui/models/Stable-diffusion/*
-    cp /home/myuser/SMPLitex/scripts/stable-diffusion-webui/models/Stable-diffusion/SMPLitex-v1.0.ckpt /home/myuser/SMPLitex/scripts/stable-diffusion-webui/stable-diffusion-webui/models/Stable-diffusion/
-fi
-
 # Remove any existing dummy data
 echo "Removing existing dummy data..."
 rm -r /home/myuser/SMPLitex/scripts/dummy_data/densepose_pkl /home/myuser/SMPLitex/scripts/dummy_data/uv-textures-inpainted /home/myuser/SMPLitex/scripts/dummy_data/debug /home/myuser/SMPLitex/scripts/dummy_data/uv-textures /home/myuser/SMPLitex/scripts/dummy_data/uv-textures-masks /home/myuser/SMPLitex/scripts/dummy_data/densepose /home/myuser/SMPLitex/scripts/dummy_data/densepose-masked /home/myuser/SMPLitex/scripts/dummy_data/images-seg
