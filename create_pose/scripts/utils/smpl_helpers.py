@@ -1,3 +1,9 @@
+"""
+View the below link to know which parts we have changed
+https://github.com/AI-capstone-project/Docker-SMPLitex/blame/main/scripts/utils/smpl_helpers.py
+The parts by sinapy are the ones that we have changed
+"""
+
 import os
 import sys
 

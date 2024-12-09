@@ -1,3 +1,5 @@
+# This script was purely made by the team
+
 # Get arguments from the command line first id, second pose_id
 id=$1
 pose_id=$2

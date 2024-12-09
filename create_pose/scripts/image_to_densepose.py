@@ -1,3 +1,9 @@
+"""
+View the below link to know which parts we have changed
+https://github.com/AI-capstone-project/Docker-SMPLitex/blame/main/scripts/image_to_densepose.py
+The parts by sinapy are the ones that we have changed
+"""
+
 import torch
 import numpy as np
 import sys

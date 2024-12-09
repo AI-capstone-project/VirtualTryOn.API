@@ -1,4 +1,9 @@
 
+"""
+View this to see which parts we have changed
+https://github.com/AI-capstone-project/Docker-SMPLitex/blame/main/scripts/compute_partial_texturemap.py
+The parts by sinapy are the ones we have changed
+"""
 from UVTextureConverter import UVConverter
 from UVTextureConverter import Normal2Atlas
 from UVTextureConverter import Atlas2Normal
@@ -15,8 +20,8 @@ class RGB2Texture:
 
     def __init__(self, dataset_root_path) -> None:
         self.dataset_root_path = dataset_root_path
-        
-        
+
+
     def apply_mask_to_iuv_images(self):
         dataset_iuv_path = os.path.join(self.dataset_root_path, 'densepose')
         dataset_mask_path = os.path.join(self.dataset_root_path, 'images-seg')
@@ -62,19 +67,19 @@ class RGB2Texture:
                             mask_w, mask_h = im_mask.size
 
                             if (iuv_w == mask_w) and (iuv_h == mask_h):
-                                
+
                                 threshold = 250
                                 im_mask = im_mask.point(lambda x: 255 if x > threshold else 0)
                                 blank = im_iuv.point(lambda _: 0)
                                 masked_iuv_image = Image.composite(im_iuv, blank, im_mask)
-                                
+
                                 print('Writing image ', os.path.join(output_iuv_masked_folder_path, path))
                                 masked_iuv_image.save(os.path.join(output_iuv_masked_folder_path, path), "PNG")
                             else:
 
                                 print('Discarding images because densepose and RGB do not match. Probably densepose failed?')
-                                
-            
+
+
                 else:
                     print(current_mask_path, 'does not exist B1')
             else:
@@ -82,11 +87,11 @@ class RGB2Texture:
 
 
     def generate_uv_texture(self):
-    
+
         # paths
         dataset_image_path = os.path.join(self.dataset_root_path, 'stableviton-created_images')
         dataset_iuv_path = os.path.join(self.dataset_root_path, 'densepose-masked')
-        
+
         # output path for UV textures
         output_textures_folder = "uv-textures"
         output_textures_folder_path = os.path.join(self.dataset_root_path, output_textures_folder)
@@ -112,7 +117,7 @@ class RGB2Texture:
 
         # size (in pixels) of each part in texture
         # WARNING: for best results, update this value depending on the input image size
-        parts_size = 120 
+        parts_size = 120
 
         # reads all the images and stores full paths in list
         for path in files:
@@ -150,9 +155,9 @@ class RGB2Texture:
         previous_tex = 0
 
         for current_image_path, current_iuv_path in zip(images_file_paths_filtered, images_iuv_paths_filtered):
-            
+
             num_images += 1
-            
+
             print('\nComputing UV texture ', num_images, '/', len(images_file_paths_filtered))
             #print('Loading        ', current_image_path)
             #print('Loading        ', current_iuv_path)
@@ -169,7 +174,7 @@ class RGB2Texture:
             # mask = UVConverter.concat_atlas_tex(mask_trans)  # 800 x 1200
 
             # convert from atlas to normal
-            texture_size = 512 
+            texture_size = 512
 
             converter = Atlas2Normal(atlas_size=parts_size, normal_size=texture_size)
             normal_tex, normal_ex = converter.convert((tex_trans*255).astype('int'), mask=mask_trans)
@@ -177,16 +182,16 @@ class RGB2Texture:
             # shows result
             fig, (ax1, ax2, ax3) = plt.subplots(1,3,figsize=(13,4))
             ax1.imshow(normal_tex)
-            
+
             ax2.set_title(os.path.basename(current_image_path), fontsize=8)
             ax2.imshow(mpimg.imread(current_image_path))
-            
+
             ax3.set_title(os.path.basename(current_iuv_path), fontsize=8)
             ax3.imshow(mpimg.imread(current_iuv_path))
-            
+
             # plt.show()
 
-            # file names for debug and output texture            
+            # file names for debug and output texture
             output_debug_filename = os.path.basename(current_image_path).replace(".jpg", "_debug.png")
             output_debug_file_path = os.path.join(output_debug_folder_path, output_debug_filename)
 
@@ -196,22 +201,22 @@ class RGB2Texture:
             # save debug image
             print('Saving         ', output_debug_file_path)
             plt.savefig(output_debug_file_path, dpi=150)
-            plt.close(fig) 
+            plt.close(fig)
 
             # save output uv texture
             normal_tex = (normal_tex * 255).round().astype(np.uint8)
             im = Image.fromarray(normal_tex, 'RGB')
             im.save(output_textures_file_path)
             print('Saving         ', output_textures_file_path)
-            
+
             previous_tex = normal_tex
 
     def compute_mask_of_partial_uv_textures(self):
 
-        # folder where the uv textures are. Ideally, these are textures generated with masked images 
+        # folder where the uv textures are. Ideally, these are textures generated with masked images
         # (e.g, the IUV images where segmented using masks computed on the rendered images)
         uv_textures_path = os.path.join(self.dataset_root_path, 'uv-textures')
-        
+
         files = os.listdir(uv_textures_path)
 
         # output path for UV masks

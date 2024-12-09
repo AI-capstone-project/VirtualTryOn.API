@@ -1,3 +1,9 @@
+"""
+View the below link to know which parts we have changed
+https://github.com/AI-capstone-project/Docker-SMPLitex/blame/main/scripts/render_results.py
+The parts by sinapy are the ones that we have changed
+"""
+
 import os
 import torch
 import argparse
@@ -18,7 +24,7 @@ class Render360:
             self.device = "mps"
         else:
             self.device = "cpu"
-            
+
         self.pose_id = pose_id
 
         #   creates a SMPL instance, and samples it T pose
@@ -40,7 +46,7 @@ class Render360:
         mesh_filename = os.path.join(__file__,"../../sample-data/smpl_uv_20200910/smpl_uv.obj")
         _, self.faces_verts, aux = load_obj(mesh_filename)
         self.verts_uvs = aux.verts_uvs[None, ...]        # (1, F, 3)
-        self.faces_uvs = self.faces_verts.textures_idx[None, ...] 
+        self.faces_uvs = self.faces_verts.textures_idx[None, ...]
 
     def adjust_body_pose(self, pose_id):
         if pose_id == 1:
