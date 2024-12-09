@@ -25,13 +25,13 @@ sys.path.insert(0, str(PROJECT_ROOT))
 IMG_H = 1024//2
 IMG_W = 768//2
 
-# openpose_model_hd = OpenPose(0)
-# openpose_model_hd.preprocessor.body_estimation.model.to('cuda')
-# parsing_model_hd = Parsing(0)
-# densepose_model_hd = DensePose4Gradio(
-#     cfg='/code/fit_garment/preprocess/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
-#     model='https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl',
-# )
+openpose_model_hd = OpenPose(0)
+openpose_model_hd.preprocessor.body_estimation.model.to('cuda')
+parsing_model_hd = Parsing(0)
+densepose_model_hd = DensePose4Gradio(
+    cfg='/code/fit_garment/preprocess/DensePose/configs/densepose_rcnn_R_50_FPN_s1x.yaml',
+    model='https://dl.fbaipublicfiles.com/densepose/densepose_rcnn_R_50_FPN_s1x/165712039/model_final_162be9.pkl',
+)
 
 category_dict = ['upperbody']
 category_dict_utils = ['upper_body']
@@ -42,11 +42,11 @@ config.model.params.img_H = IMG_H
 config.model.params.img_W = IMG_W
 params = config.model.params
 
-# model = create_model(config_path=None, config=config)
-# model.load_state_dict(torch.load("/code/fit_garment/checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
-# model = model.cuda()
-# model.eval()
-# sampler2 = PLMSSampler(model)
+model = create_model(config_path=None, config=config)
+model.load_state_dict(torch.load("/code/fit_garment/checkpoints/VITONHD_1024.ckpt", map_location="cuda:0")["state_dict"])
+model = model.cuda()
+model.eval()
+sampler2 = PLMSSampler(model)
 
 """
 We extracted the image processing in the below code,
@@ -93,7 +93,7 @@ def stable_viton_model_hd(
 
 def process_hd(vton_img, garm_img, n_steps):
     global IncrementalID
-    return vton_img
+    # return vton_img
     model_type = 'hd'
     category = 0  # 0:upperbody;
 
